@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotly.js 高级图表查看器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fff;
+            overflow: hidden;
+        }
+        #chart-container {
+            width: 100%;
+            height: 100vh;
+            background: white;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #666;
+            font-size: 14px;
+        }
+        .error {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #ff4d4f;
+            font-size: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container">
+        <div class="loading">正在加载图表...</div>
+    </div>
+
+    <!-- 加载 Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    
+    <script>
+        (function() {
+            'use strict';
+
+            var container = document.getElementById('chart-container');
+            var Plotly = window.Plotly;
+            var currentData = null;
+            var currentConfig = null;
+            var nodeInfo = null;
+            var currentPlot = null;
+
+            // 配置参数（从节点配置中获取，或使用默认值）
+            var chartType = 'scatter';
+            var xField = 'x';
+            var yFields = 'y';
+            var zField = 'z';
+            var mode = 'markers';
+            var chartTitle = '';
+            var xAxisTitle = '';
+            var yAxisTitle = '';
+            var colorTheme = 'plotly';
+            var showLegend = true;
+            var legendPosition = 'top';
+            var showGrid = true;
+            var markerSize = 6;
+            var lineWidth = 2;
+            var opacity = 1.0;
+            var animation = false;
+            var enableZoom = true;
+            var enablePan = true;
+            var enableDownload = false;
+
+            // 初始化：发送 ready 消息
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'ready'
+                }, '*');
+            }
+
+            // 监听来自主应用的消息
+            window.addEventListener('message', function(event) {
+                try {
+                    console.log('[PlotlyjsChartViewerPro] 收到消息:', event.data);
+
+                    var message = event.data;
+                    if (!message || !message.type) {
+                        return;
+                    }
+
+                    switch (message.type) {
+                        case 'data_update':
+                            handleDataUpdate(message.payload);
+                            break;
+                        
+                        case 'config_update':
+                            handleConfigUpdate(message.payload);
+                            break;
+                        
+                        case 'node_info':
+                            handleNodeInfoUpdate(message.payload);
+                            break;
+                    }
+                } catch (error) {
+                    console.error('[PlotlyjsChartViewerPro] 处理消息失败:', error);
+                    showError('处理消息失败: ' + error.message);
+                }
+            });
+
+            // 处理数据更新
+            function handleDataUpdate(payload) {
+                if (!payload || !payload.data) {
+                    return;
+                }
+
+                currentData = payload.data;
+                renderChart();
+            }
+
+            // 处理配置更新
+            function handleConfigUpdate(payload) {
+                if (!payload || !payload.config) {
+                    return;
+                }
+
+                currentConfig = payload.config;
+                
+                // 从配置中提取图表参数
+                if (currentConfig.chart_type !== undefined) {
+                    chartType = currentConfig.chart_type;
+                }
+                if (currentConfig.x_field !== undefined) {
+                    xField = currentConfig.x_field;
+                }
+                if (currentConfig.y_fields !== undefined) {
+                    yFields = currentConfig.y_fields;
+                }
+                if (currentConfig.z_field !== undefined) {
+                    zField = currentConfig.z_field;
+                }
+                if (currentConfig.mode !== undefined) {
+                    mode = currentConfig.mode;
+                }
+                if (currentConfig.chart_title !== undefined) {
+                    chartTitle = currentConfig.chart_title;
+                }
+                if (currentConfig.x_axis_title !== undefined) {
+                    xAxisTitle = currentConfig.x_axis_title;
+                }
+                if (currentConfig.y_axis_title !== undefined) {
+                    yAxisTitle = currentConfig.y_axis_title;
+                }
+                if (currentConfig.color_theme !== undefined) {
+                    colorTheme = currentConfig.color_theme;
+                }
+                if (currentConfig.show_legend !== undefined) {
+                    showLegend = currentConfig.show_legend;
+                }
+                if (currentConfig.legend_position !== undefined) {
+                    legendPosition = currentConfig.legend_position;
+                }
+                if (currentConfig.show_grid !== undefined) {
+                    showGrid = currentConfig.show_grid;
+                }
+                if (currentConfig.marker_size !== undefined) {
+                    markerSize = currentConfig.marker_size;
+                }
+                if (currentConfig.line_width !== undefined) {
+                    lineWidth = currentConfig.line_width;
+                }
+                if (currentConfig.opacity !== undefined) {
+                    opacity = currentConfig.opacity;
+                }
+                if (currentConfig.animation !== undefined) {
+                    animation = currentConfig.animation;
+                }
+                if (currentConfig.enable_zoom !== undefined) {
+                    enableZoom = currentConfig.enable_zoom;
+                }
+                if (currentConfig.enable_pan !== undefined) {
+                    enablePan = currentConfig.enable_pan;
+                }
+                if (currentConfig.enable_download !== undefined) {
+                    enableDownload = currentConfig.enable_download;
+                }
+
+                // 如果已有数据，重新渲染
+                if (currentData) {
+                    renderChart();
+                }
+            }
+
+            // 处理节点信息更新
+            function handleNodeInfoUpdate(payload) {
+                if (payload && payload.nodeInfo) {
+                    nodeInfo = payload.nodeInfo;
+                    console.log('[PlotlyjsChartViewerPro] 节点信息:', nodeInfo);
+                }
+            }
+
+            // 将数据转换为 Plotly trace 格式
+            function convertDataToTraces(data) {
+                if (!Array.isArray(data) || data.length === 0) {
+                    return [];
+                }
+
+                // 检查数据格式：如果第一个元素是 trace 格式
+                var firstItem = data[0];
+                if (firstItem && typeof firstItem === 'object') {
+                    // 检查是否是 trace 格式
+                    var isTraceFormat = firstItem.type !== undefined || 
+                                       (Array.isArray(firstItem.x) && Array.isArray(firstItem.y));
+                    
+                    if (isTraceFormat) {
+                        // 已经是 trace 格式，直接使用
+                        return data;
+                    }
+                }
+
+                // 解析多系列字段
+                var xFieldsList = xField.split(',').map(function(f) { return f.trim(); });
+                var yFieldsList = yFields.split(',').map(function(f) { return f.trim(); });
+                var zFieldsList = zField ? zField.split(',').map(function(f) { return f.trim(); }) : [];
+
+                var traces = [];
+
+                // 为每个 Y 字段创建一个 trace
+                yFieldsList.forEach(function(yFieldName, index) {
+                    var xFieldName = xFieldsList[index] || xFieldsList[0] || 'x';
+                    var zFieldName = zFieldsList[index] || zFieldsList[0] || null;
+
+                    var xValues = [];
+                    var yValues = [];
+                    var zValues = [];
+
+                    data.forEach(function(item) {
+                        if (item && typeof item === 'object') {
+                            var xVal = item[xFieldName];
+                            var yVal = item[yFieldName];
+                            var zVal = zFieldName ? item[zFieldName] : undefined;
+                            
+                            if (xVal !== undefined && yVal !== undefined) {
+                                xValues.push(xVal);
+                                yValues.push(yVal);
+                                if (zVal !== undefined) {
+                                    zValues.push(zVal);
+                                }
+                            }
+                        }
+                    });
+
+                    if (xValues.length === 0) {
+                        return;
+                    }
+
+                    // 根据图表类型创建 trace
+                    var trace = {
+                        x: xValues,
+                        y: yValues,
+                        type: getPlotlyType(chartType),
+                        mode: getModeForType(chartType, mode),
+                        name: yFieldName || ('系列 ' + (index + 1)),
+                        marker: {
+                            size: markerSize,
+                            opacity: opacity
+                        },
+                        line: {
+                            width: lineWidth,
+                            opacity: opacity
+                        },
+                        opacity: opacity
+                    };
+
+                    // 3D 图表需要 z 值
+                    if (chartType === 'scatter3d' || chartType === 'surface') {
+                        if (zValues.length > 0) {
+                            trace.z = zValues;
+                        } else {
+                            // 如果没有 z 值，使用索引
+                            trace.z = xValues.map(function(_, i) { return i; });
+                        }
+                    }
+
+                    // 特殊图表类型的处理
+                    if (chartType === 'area') {
+                        trace.fill = 'tozeroy';
+                        trace.mode = 'lines';
+                    } else if (chartType === 'pie') {
+                        trace.values = yValues;
+                        trace.labels = xValues;
+                        delete trace.x;
+                        delete trace.y;
+                    } else if (chartType === 'scatterpolar') {
+                        trace.r = yValues;
+                        trace.theta = xValues;
+                        delete trace.x;
+                        delete trace.y;
+                    } else if (chartType === 'heatmap') {
+                        // 热力图需要特殊处理
+                        trace.z = [yValues];
+                        trace.x = xValues;
+                        trace.y = ['系列1'];
+                        delete trace.y;
+                    }
+
+                    traces.push(trace);
+                });
+
+                return traces;
+            }
+
+            // 获取 Plotly 图表类型
+            function getPlotlyType(type) {
+                var typeMap = {
+                    'line': 'scatter',
+                    'area': 'scatter',
+                    'barh': 'bar',
+                    'scatter3d': 'scatter3d',
+                    'surface': 'surface',
+                    'pie': 'pie',
+                    'scatterpolar': 'scatterpolar',
+                    'heatmap': 'heatmap',
+                    'box': 'box',
+                    'violin': 'violin',
+                    'histogram': 'histogram'
+                };
+                return typeMap[type] || type;
+            }
+
+            // 获取模式（某些图表类型不支持 mode）
+            function getModeForType(type, mode) {
+                if (type === 'bar' || type === 'barh' || type === 'pie' || 
+                    type === 'box' || type === 'violin' || type === 'histogram' ||
+                    type === 'heatmap' || type === 'scatterpolar' || type === 'surface') {
+                    return undefined;
+                }
+                return mode;
+            }
+
+            // 获取图例位置配置
+            function getLegendConfig() {
+                var positionMap = {
+                    'top': { x: 0.5, y: 1.02, xanchor: 'center', yanchor: 'bottom' },
+                    'bottom': { x: 0.5, y: -0.15, xanchor: 'center', yanchor: 'top' },
+                    'left': { x: -0.15, y: 0.5, xanchor: 'right', yanchor: 'middle' },
+                    'right': { x: 1.02, y: 0.5, xanchor: 'left', yanchor: 'middle' },
+                    'top-right': { x: 1, y: 1.02, xanchor: 'right', yanchor: 'bottom' },
+                    'top-left': { x: 0, y: 1.02, xanchor: 'left', yanchor: 'bottom' },
+                    'bottom-right': { x: 1, y: -0.15, xanchor: 'right', yanchor: 'top' },
+                    'bottom-left': { x: 0, y: -0.15, xanchor: 'left', yanchor: 'top' }
+                };
+                return positionMap[legendPosition] || positionMap['top'];
+            }
+
+            // 渲染图表
+            function renderChart() {
+                if (!Plotly) {
+                    showError('Plotly.js 未加载');
+                    return;
+                }
+
+                // 获取数据（从 data 端口）
+                var data = null;
+                if (currentData && currentData.data) {
+                    data = currentData.data;
+                } else if (Array.isArray(currentData)) {
+                    data = currentData;
+                } else if (currentData && typeof currentData === 'object') {
+                    // 尝试从对象中获取数据
+                    data = currentData.data || currentData.values || currentData;
+                }
+
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<div class="loading">暂无数据</div>';
+                    return;
+                }
+
+                try {
+                    // 转换数据为 Plotly trace 格式
+                    var traces = convertDataToTraces(data);
+
+                    if (traces.length === 0) {
+                        container.innerHTML = '<div class="loading">数据格式不正确</div>';
+                        return;
+                    }
+
+                    // 配置布局
+                    var layout = {
+                        title: chartTitle ? {
+                            text: chartTitle,
+                            x: 0.5,
+                            xanchor: 'center',
+                            font: { size: 16 }
+                        } : undefined,
+                        xaxis: {
+                            title: xAxisTitle || xField,
+                            showgrid: showGrid,
+                            zeroline: false
+                        },
+                        yaxis: {
+                            title: yAxisTitle || yFields.split(',')[0].trim(),
+                            showgrid: showGrid,
+                            zeroline: false
+                        },
+                        hovermode: 'closest',
+                        template: colorTheme,
+                        responsive: true,
+                        autosize: true,
+                        height: container.clientHeight || 400,
+                        margin: {
+                            l: 60,
+                            r: 20,
+                            t: chartTitle ? 60 : 20,
+                            b: 60
+                        },
+                        showlegend: showLegend,
+                        legend: showLegend ? getLegendConfig() : undefined
+                    };
+
+                    // 3D 图表需要特殊布局
+                    if (chartType === 'scatter3d' || chartType === 'surface') {
+                        layout.scene = {
+                            xaxis: { title: xAxisTitle || xField },
+                            yaxis: { title: yAxisTitle || yFields.split(',')[0].trim() },
+                            zaxis: { title: zField || 'Z' }
+                        };
+                    }
+
+                    // 配置选项
+                    var config = {
+                        responsive: true,
+                        displayModeBar: enableDownload,
+                        displaylogo: false,
+                        modeBarButtonsToRemove: enableZoom ? [] : ['zoom2d', 'zoomIn2d', 'zoomOut2d'],
+                        modeBarButtonsToAdd: enablePan ? [] : []
+                    };
+
+                    // 如果禁用缩放和平移，移除相关按钮
+                    if (!enableZoom) {
+                        config.modeBarButtonsToRemove.push('pan2d', 'select2d', 'lasso2d', 'autoScale2d');
+                    }
+                    if (!enablePan) {
+                        config.modeBarButtonsToRemove.push('pan2d');
+                    }
+
+                    // 渲染图表
+                    var updateOptions = animation ? {
+                        transition: {
+                            duration: 500,
+                            easing: 'cubic-in-out'
+                        }
+                    } : {};
+
+                    if (currentPlot) {
+                        // 更新现有图表
+                        Plotly.update(container, traces, layout, updateOptions);
+                    } else {
+                        // 创建新图表
+                        Plotly.newPlot(container, traces, layout, config);
+                        currentPlot = container;
+                    }
+
+                    console.log('[PlotlyjsChartViewerPro] 图表渲染成功，数据条数:', data.length, '系列数:', traces.length);
+                } catch (error) {
+                    console.error('[PlotlyjsChartViewerPro] 渲染图表失败:', error);
+                    showError('渲染图表失败: ' + error.message);
+                }
+            }
+
+            // 显示错误
+            function showError(message) {
+                container.innerHTML = '<div class="error">' + message + '</div>';
+            }
+
+            // 等待 Plotly.js 加载完成
+            if (Plotly) {
+                // Plotly.js 已加载
+                console.log('[PlotlyjsChartViewerPro] Plotly.js 已加载');
+            } else {
+                // 如果 Plotly.js 未加载，显示错误
+                showError('Plotly.js 加载失败，请检查网络连接');
+            }
+        })();
+    </script>
+</body>
+</html>

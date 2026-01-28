@@ -1,0 +1,90 @@
+name: "data_filter_ts"
+version: "1.0.0"
+description: "基于 lodash 的通用数据过滤器，支持对任意来源的数据进行过滤操作"
+author: "FlowData Team"
+license: "MIT"
+type: "data_processing"
+category: "数据处理"
+tags: ["filter", "lodash", "data_processing", "typescript"]
+
+# 代码路径
+code_path: "main.ts"
+entry_point: "DataFilterOperator"
+operator_type: "local_typescript"
+
+# 输入定义
+inputs:
+  - name: "data"
+    type: "any"
+    required: true
+    description: "需要过滤的数据，支持数组、对象等任意数据结构"
+
+# 输出定义
+outputs:
+  - name: "filtered_data"
+    type: "any"
+    description: "过滤后的数据"
+
+# 算子参数配置（用户自定义配置）
+operator_params:
+  - name: "filter_type"
+    label: "过滤类型"
+    type: "string"
+    description: "选择过滤操作的类型"
+    required: true
+    default: "filter"
+    ui:
+      component: "select"
+      options:
+        - label: "数组过滤 (filter)"
+          value: "filter"
+        - label: "对象过滤 (pick)"
+          value: "pick"
+        - label: "对象排除 (omit)"
+          value: "omit"
+        - label: "去重 (uniq)"
+          value: "uniq"
+        - label: "移除空值 (compact)"
+          value: "compact"
+        - label: "移除假值 (compact)"
+          value: "compact_falsy"
+        - label: "自定义过滤函数"
+          value: "custom"
+
+  - name: "filter_condition"
+    label: "过滤条件"
+    type: "string"
+    description: "过滤条件配置，根据过滤类型不同格式不同。filter: 对象条件如 {\"age\": \">18\"}；pick/omit: 键名数组如 [\"name\", \"age\"]；custom: JavaScript 函数字符串"
+    required: false
+    default: ""
+    ui:
+      component: "textarea"
+      itemProps:
+        layout: "vertical"
+      componentProps:
+        rows: 4
+        placeholder: "请输入过滤条件，例如：{\"age\": \">18\", \"status\": \"active\"} 或 [\"name\", \"age\"]"
+
+  - name: "custom_function"
+    label: "自定义过滤函数"
+    type: "string"
+    description: "自定义过滤函数（仅当过滤类型为 custom 时使用），函数接收 item 参数，返回 true/false"
+    required: false
+    default: ""
+    ui:
+      component: "textarea"
+      itemProps:
+        layout: "vertical"
+      componentProps:
+        rows: 4
+        placeholder: "例如：function(item) { return item.age > 18 && item.status === 'active'; }"
+
+  - name: "deep_clone"
+    label: "深度克隆"
+    type: "boolean"
+    description: "是否对结果进行深度克隆，避免修改原始数据"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+

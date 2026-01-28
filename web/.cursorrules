@@ -1,0 +1,112 @@
+# Web 项目开发规范
+
+本文档记录了 web 项目的开发规范和注意事项，请严格遵守。
+
+---
+
+## 🎨 主题配置
+
+### 当前主题：Dark（暗色主题）
+
+**重要提醒：当前 web 项目使用 Dark 主题（暗色主题）**
+
+- **配置位置**：`web/src/main.tsx` 第 84 行
+- **主题算法**：`theme.darkAlgorithm`
+- **影响范围**：所有 Ant Design 组件都会自动应用 dark 主题样式
+
+### 开发注意事项
+
+- 在编写自定义样式时，请考虑 dark 主题的视觉效果
+- 选择颜色时，确保在暗色背景下具有良好的对比度和可读性
+- 自定义组件样式时，应与 dark 主题保持一致
+
+---
+
+## 🚫 Ant Design Modal 使用规范
+
+### 禁止使用函数式 Modal 方法
+
+**❌ 禁止使用以下方法：**
+- `Modal.confirm()`
+- `Modal.info()`
+- `Modal.success()`
+- `Modal.error()`
+- `Modal.warning()`
+
+### 问题原因
+
+这些函数式调用的 Modal 方法通过 `ReactDOM.render` 或类似 API 直接渲染到 DOM 中，**不会继承 `ConfigProvider` 中的主题配置**（特别是 dark 主题）。在使用 `theme.darkAlgorithm` 时，这些 Modal **不会应用暗色主题**，导致样式不一致。
+
+### ✅ 正确做法
+
+**始终使用受控的 `<Modal>` 组件**，通过 `open` prop 来控制显示/隐藏：
+
+```tsx
+// ❌ 错误示例 - 不会应用主题
+Modal.confirm({
+  title: '确认',
+  content: '...',
+  onOk: () => {...}
+});
+
+// ✅ 正确示例 - 会正确应用主题
+const [visible, setVisible] = useState(false);
+
+<Modal
+  title="确认"
+  open={visible}
+  onCancel={() => setVisible(false)}
+  onOk={() => {
+    // 处理逻辑
+    setVisible(false);
+  }}
+>
+  内容
+</Modal>
+```
+
+### 代码检查清单
+
+在编写代码时，确保：
+- [ ] 没有使用 `Modal.confirm()`、`Modal.info()` 等函数式方法
+- [ ] 所有 Modal 都使用 `<Modal>` 组件
+- [ ] Modal 的状态通过 React state 管理（使用 `open` prop）
+- [ ] Modal 能够正确应用 dark 主题样式
+
+---
+
+## 🏷️ Ant Design Tag 组件使用规范
+
+### ⚠️ 重要提醒：Tag 组件没有 `size` 属性
+
+**❌ 错误用法：**
+```tsx
+<Tag color="green" size="small">默认</Tag>
+```
+
+**✅ 正确用法：**
+```tsx
+<Tag color="green">默认</Tag>
+```
+
+### 说明
+
+Ant Design 的 `Tag` 组件**不支持 `size` 属性**。如果需要控制大小，可以使用 CSS 样式或通过 `className` 自定义样式。
+
+### 常见错误
+
+- ❌ `<Tag size="small">` - Tag 组件不支持 size 属性
+- ✅ `<Tag>` - 正确用法，使用默认大小
+
+### 代码检查清单
+
+在使用 Tag 组件时，确保：
+- [ ] 没有使用 `size` 属性
+
+---
+
+## 📚 参考资源
+
+- Ant Design 官方文档：[ConfigProvider](https://ant.design/components/config-provider-cn)
+- Ant Design Tag 组件文档：[Tag](https://ant.design/components/tag-cn)
+- 项目主题配置：`web/src/main.tsx`

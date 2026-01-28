@@ -1,0 +1,91 @@
+name: "plotlyjs_chart_viewer"
+version: "1.0.0"
+description: "Plotly.js 图表查看器 - 使用纯前端 JavaScript 和 Plotly.js 实现数据可视化，仅用于展示，不产生输出"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_visualtion"
+category: "数据可视化"
+tags: ["plotly", "plotlyjs", "visualization", "javascript", "frontend", "display"]
+
+# 纯前端可视化算子不需要代码路径和执行配置
+# 数据通过 SSE 直接推送到前端，由 data_visualization.entry_file 中的前端代码处理
+
+inputs:
+  - name: "data"
+    type: "list"
+    required: true
+    description: "要可视化的数据列表，格式: [{\"x\": value1, \"y\": value2}, ...] 或支持多个 trace 的格式"
+
+# 不定义 outputs，因为这只是用于可视化展示
+
+operator_params:
+  - name: "chart_type"
+    label: "图表类型"
+    type: "string"
+    description: "选择图表类型"
+    required: false
+    default: "scatter"
+    ui:
+      component: "select"
+      options:
+        - label: "散点图"
+          value: "scatter"
+        - label: "折线图"
+          value: "line"
+        - label: "柱状图"
+          value: "bar"
+        - label: "面积图"
+          value: "area"
+
+  - name: "x_field"
+    label: "X轴字段"
+    type: "string"
+    description: "X轴对应的数据字段名"
+    required: false
+    default: "x"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: x, date, category"
+
+  - name: "y_field"
+    label: "Y轴字段"
+    type: "string"
+    description: "Y轴对应的数据字段名"
+    required: false
+    default: "y"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: y, value, count"
+
+  - name: "mode"
+    label: "显示模式"
+    type: "string"
+    description: "散点图/折线图的显示模式"
+    required: false
+    default: "markers"
+    ui:
+      component: "select"
+      options:
+        - label: "仅标记点"
+          value: "markers"
+        - label: "仅线条"
+          value: "lines"
+        - label: "线条+标记点"
+          value: "lines+markers"
+
+data_visualization:
+  entry_file: "./preview/main.html"
+  always_expand: true
+  icon: "line-chart"
+  color: "#6366f1"
+  allow_fullscreen: true
+  size:
+    width: "auto"
+    height: 300
+
+execution:
+  timeout: 60
+  max_memory: "512MB"
+  max_cpu: 1

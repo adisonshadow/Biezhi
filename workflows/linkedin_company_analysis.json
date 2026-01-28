@@ -1,0 +1,105 @@
+{
+  "name": "LinkedIn公司数据分析工作流",
+  "description": "分析LinkedIn公司信息CSV文件，包括数据清洗、统计分析和结果保存",
+  "version": "1.0.0",
+  "author": "Biezhi Team",
+  "license": "MIT",
+  "category": "数据分析",
+  "tags": ["linkedin", "company", "analysis", "data_analysis"],
+  "nodes": [
+    {
+      "id": "node_file_reader",
+      "operatorId": "op_9e17d646",
+      "operatorType": "local_python",
+      "nodeType": "input",
+      "config": {
+        "file_path": "Demo/local_csv/LinkedIn-company-info.csv",
+        "file_type": "csv",
+        "encoding": "utf-8",
+        "delimiter": ",",
+        "header_row": 0,
+        "skip_rows": 0,
+        "auto_detect_types": true
+      },
+      "positionX": 100,
+      "positionY": 200
+    },
+    {
+      "id": "node_data_cleaner",
+      "operatorId": "op_92f78edd",
+      "operatorType": "local_python",
+      "nodeType": "processor",
+      "config": {
+        "drop_na_strategy": "fill_numeric_mean",
+        "remove_duplicates": true,
+        "normalize_columns": false,
+        "columns_to_drop": ""
+      },
+      "positionX": 400,
+      "positionY": 200
+    },
+    {
+      "id": "node_data_analyzer",
+      "operatorId": "op_41093a82",
+      "operatorType": "local_python",
+      "nodeType": "processor",
+      "config": {
+        "group_by_columns": "country_code",
+        "aggregate_columns": "followers,employees_in_linkedin",
+        "aggregate_functions": "count,mean,max",
+        "analysis_type": "groupby"
+      },
+      "positionX": 700,
+      "positionY": 200
+    },
+    {
+      "id": "node_data_saver",
+      "operatorId": "op_f7eac3e4",
+      "operatorType": "local_python",
+      "nodeType": "output",
+      "config": {
+        "save_type": "database",
+        "table_name": "linkedin_company_analysis",
+        "if_exists": "replace"
+      },
+      "positionX": 1000,
+      "positionY": 200
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "from": {
+        "node": "node_file_reader",
+        "port": "dataframe"
+      },
+      "to": {
+        "node": "node_data_cleaner",
+        "port": "dataframe"
+      }
+    },
+    {
+      "id": "conn_2",
+      "from": {
+        "node": "node_data_cleaner",
+        "port": "cleaned_dataframe"
+      },
+      "to": {
+        "node": "node_data_analyzer",
+        "port": "dataframe"
+      }
+    },
+    {
+      "id": "conn_3",
+      "from": {
+        "node": "node_data_analyzer",
+        "port": "analysis_result"
+      },
+      "to": {
+        "node": "node_data_saver",
+        "port": "dataframe"
+      }
+    }
+  ]
+}
+

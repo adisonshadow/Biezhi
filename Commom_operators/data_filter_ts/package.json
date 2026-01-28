@@ -1,0 +1,19 @@
+{
+  "name": "data-filter-ts",
+  "version": "1.0.0",
+  "description": "基于 lodash 的通用数据过滤器算子",
+  "main": "main.ts",
+  "scripts": {
+    "test": "ts-node main.ts"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
+

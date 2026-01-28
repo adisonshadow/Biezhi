@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #141414;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+/* 全局滚动条样式 - 类 iPhone 风格 + 不占宽度 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 148, 148, 0.437);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 100, 100, 0.614);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(80, 80, 80, 0.746);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 148, 148, 0.3) transparent;
+  scroll-behavior: smooth;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* React Flow Handle 位置覆盖样式 */
+.react-flow__handle-right {
+  right: -8px;
+}
+
+.react-flow__handle-left {
+  left: -8px;
+}
+
+/* AddNodeModal Tabs 内容区域滚动样式 - 只影响 Modal 内的 Tabs */
+.ant-modal .ant-tabs-content-holder {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ant-modal .ant-tabs-tabpane {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Panel Icon Button 样式 */
+.panel-icon-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  transition: color 0.2s ease !important;
+}
+
+.panel-icon-btn:hover {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.panel-icon-btn:focus {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Node Panel Item 样式 */
+.node-panel-item {
+  cursor: pointer;
+  padding: 12px;
+  margin-right: 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  background-color: rgba(255, 255, 255, 0.033);
+}
+
+.node-panel-item:hover {
+  /* border-color: #1890ff; */
+  background-color: rgba(255, 255, 255, 0.068);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+

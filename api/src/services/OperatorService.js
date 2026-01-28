@@ -1,0 +1,75 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.OperatorService = void 0;
+const database_1 = require("../../../config/database");
+const Operator_1 = require("../../../package/entities/Operator");
+class OperatorService {
+    serializeOperator(operator) {
+        return {
+            id: operator.id,
+            name: operator.name,
+            version: operator.version,
+            description: operator.description,
+            author: operator.author,
+            license: operator.license,
+            type: operator.type,
+            category: operator.category,
+            tags: operator.tags ? JSON.parse(operator.tags) : [],
+            codePath: operator.codePath,
+            entryPoint: operator.entryPoint,
+            operatorType: operator.operatorType,
+            inputs: operator.inputs ? JSON.parse(operator.inputs) : [],
+            outputs: operator.outputs ? JSON.parse(operator.outputs) : [],
+            operatorParams: operator.operatorParams ? JSON.parse(operator.operatorParams) : [],
+            executionConfig: operator.executionConfig ? JSON.parse(operator.executionConfig) : {},
+            dataVisualization: operator.dataVisualization ? JSON.parse(operator.dataVisualization) : null,
+            mockdata: operator.mockdata ? JSON.parse(operator.mockdata) : null,
+            metadata: operator.metadata ? JSON.parse(operator.metadata) : {},
+            createdAt: operator.createdAt,
+            updatedAt: operator.updatedAt,
+        };
+    }
+    async getOperatorById(id) {
+        const repository = database_1.AppDataSource.getRepository(Operator_1.Operator);
+        return await repository.findOne({
+            where: { id },
+        });
+    }
+    async search(name, tag, type) {
+        const repository = database_1.AppDataSource.getRepository(Operator_1.Operator);
+        const queryBuilder = repository.createQueryBuilder('operator');
+        if (name) {
+            queryBuilder.andWhere('operator.name LIKE :name', { name: `%${name}%` });
+        }
+        if (tag) {
+            queryBuilder.andWhere('operator.tags LIKE :tag', { tag: `%${tag}%` });
+        }
+        if (type) {
+            queryBuilder.andWhere('operator.type = :type', { type });
+        }
+        const operators = await queryBuilder.getMany();
+        return operators.map(op => this.serializeOperator(op));
+    }
+    async getStats() {
+        const repository = database_1.AppDataSource.getRepository(Operator_1.Operator);
+        const total = await repository.count();
+        const byType = await repository
+            .createQueryBuilder('operator')
+            .select('operator.type', 'type')
+            .addSelect('COUNT(*)', 'count')
+            .groupBy('operator.type')
+            .getRawMany();
+        const byCategory = await repository
+            .createQueryBuilder('operator')
+            .select('operator.category', 'category')
+            .addSelect('COUNT(*)', 'count')
+            .groupBy('operator.category')
+            .getRawMany();
+        return {
+            total,
+            byType: byType.map((item) => ({ type: item.type, count: parseInt(item.count) })),
+            byCategory: byCategory.map((item) => ({ category: item.category, count: parseInt(item.count) })),
+        };
+    }
+}
+exports.OperatorService = OperatorService;

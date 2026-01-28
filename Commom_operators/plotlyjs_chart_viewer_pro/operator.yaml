@@ -1,0 +1,305 @@
+name: "plotlyjs_chart_viewer_pro"
+version: "2.0.0"
+description: "Plotly.js 高级图表查看器 - 功能丰富的纯前端数据可视化工具，支持多种图表类型、多系列数据、自定义样式和高级配置"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_visualtion"
+category: "数据可视化"
+tags: ["plotly", "plotlyjs", "visualization", "javascript", "frontend", "display", "advanced", "pro"]
+
+# 纯前端可视化算子不需要代码路径和执行配置
+# 数据通过 SSE 直接推送到前端，由 data_visualization.entry_file 中的前端代码处理
+
+inputs:
+  - name: "data"
+    type: "list"
+    required: true
+    description: "要可视化的数据列表，支持多种格式：对象数组、trace数组、多系列数据等"
+
+# 不定义 outputs，因为这只是用于可视化展示
+
+operator_params:
+  - name: "chart_type"
+    label: "图表类型"
+    type: "string"
+    description: "选择图表类型"
+    required: false
+    default: "scatter"
+    ui:
+      component: "select"
+      options:
+        - label: "散点图"
+          value: "scatter"
+        - label: "折线图"
+          value: "line"
+        - label: "柱状图"
+          value: "bar"
+        - label: "水平柱状图"
+          value: "barh"
+        - label: "面积图"
+          value: "area"
+        - label: "箱线图"
+          value: "box"
+        - label: "小提琴图"
+          value: "violin"
+        - label: "直方图"
+          value: "histogram"
+        - label: "热力图"
+          value: "heatmap"
+        - label: "3D散点图"
+          value: "scatter3d"
+        - label: "3D表面图"
+          value: "surface"
+        - label: "饼图"
+          value: "pie"
+        - label: "雷达图"
+          value: "scatterpolar"
+
+  - name: "x_field"
+    label: "X轴字段"
+    type: "string"
+    description: "X轴对应的数据字段名，支持多个字段用逗号分隔（用于多系列）"
+    required: false
+    default: "x"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: x, date, category 或 x1,x2,x3"
+
+  - name: "y_fields"
+    label: "Y轴字段（多系列）"
+    type: "string"
+    description: "Y轴对应的数据字段名，支持多个字段用逗号分隔，每个字段将创建一个系列"
+    required: false
+    default: "y"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: y 或 y1,y2,y3"
+
+  - name: "z_field"
+    label: "Z轴字段（3D图表）"
+    type: "string"
+    description: "Z轴对应的数据字段名（仅用于3D图表）"
+    required: false
+    default: "z"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: z, depth, value"
+
+  - name: "mode"
+    label: "显示模式"
+    type: "string"
+    description: "散点图/折线图的显示模式"
+    required: false
+    default: "markers"
+    ui:
+      component: "select"
+      options:
+        - label: "仅标记点"
+          value: "markers"
+        - label: "仅线条"
+          value: "lines"
+        - label: "线条+标记点"
+          value: "lines+markers"
+        - label: "文本"
+          value: "text"
+        - label: "文本+标记点"
+          value: "text+markers"
+        - label: "文本+线条"
+          value: "text+lines"
+        - label: "文本+线条+标记点"
+          value: "text+lines+markers"
+
+  - name: "chart_title"
+    label: "图表标题"
+    type: "string"
+    description: "图表标题文本"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: 销售数据分析"
+
+  - name: "x_axis_title"
+    label: "X轴标题"
+    type: "string"
+    description: "X轴标题文本"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: 时间、日期、类别"
+
+  - name: "y_axis_title"
+    label: "Y轴标题"
+    type: "string"
+    description: "Y轴标题文本"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: 数值、金额、数量"
+
+  - name: "color_theme"
+    label: "颜色主题"
+    type: "string"
+    description: "图表颜色主题"
+    required: false
+    default: "plotly"
+    ui:
+      component: "select"
+      options:
+        - label: "Plotly 默认"
+          value: "plotly"
+        - label: "Plotly 深色"
+          value: "plotly_dark"
+        - label: "白色"
+          value: "plotly_white"
+        - label: "ggplot2"
+          value: "ggplot2"
+        - label: "Seaborn"
+          value: "seaborn"
+        - label: "简单"
+          value: "simple_white"
+        - label: "无"
+          value: "none"
+
+  - name: "show_legend"
+    label: "显示图例"
+    type: "boolean"
+    description: "是否显示图例（多系列数据时建议开启）"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "legend_position"
+    label: "图例位置"
+    type: "string"
+    description: "图例在图表中的位置"
+    required: false
+    default: "top"
+    ui:
+      component: "select"
+      options:
+        - label: "顶部"
+          value: "top"
+        - label: "底部"
+          value: "bottom"
+        - label: "左侧"
+          value: "left"
+        - label: "右侧"
+          value: "right"
+        - label: "右上角"
+          value: "top-right"
+        - label: "左上角"
+          value: "top-left"
+        - label: "右下角"
+          value: "bottom-right"
+        - label: "左下角"
+          value: "bottom-left"
+
+  - name: "show_grid"
+    label: "显示网格线"
+    type: "boolean"
+    description: "是否显示网格线"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "marker_size"
+    label: "标记点大小"
+    type: "number"
+    description: "散点图中标记点的大小（像素）"
+    required: false
+    default: 6
+    ui:
+      component: "input-number"
+      componentProps:
+        min: 1
+        max: 50
+        step: 1
+
+  - name: "line_width"
+    label: "线条宽度"
+    type: "number"
+    description: "折线图中线条的宽度（像素）"
+    required: false
+    default: 2
+    ui:
+      component: "input-number"
+      componentProps:
+        min: 1
+        max: 10
+        step: 0.5
+
+  - name: "opacity"
+    label: "透明度"
+    type: "number"
+    description: "图表元素的透明度（0-1）"
+    required: false
+    default: 1.0
+    ui:
+      component: "input-number"
+      componentProps:
+        min: 0
+        max: 1
+        step: 0.1
+
+  - name: "animation"
+    label: "启用动画"
+    type: "boolean"
+    description: "是否启用数据更新动画效果"
+    required: false
+    default: false
+    ui:
+      component: "switch"
+
+  - name: "enable_zoom"
+    label: "启用缩放"
+    type: "boolean"
+    description: "是否允许用户缩放图表"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "enable_pan"
+    label: "启用平移"
+    type: "boolean"
+    description: "是否允许用户平移图表"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "enable_download"
+    label: "启用下载"
+    type: "boolean"
+    description: "是否显示下载按钮（允许用户下载图表为图片）"
+    required: false
+    default: false
+    ui:
+      component: "switch"
+
+data_visualization:
+  entry_file: "./preview/main.html"
+  always_expand: true
+  icon: "bar-chart"
+  color: "#8b5cf6"
+  allow_fullscreen: true
+  allow_resize: true
+  size:
+    width: "100%"
+    height: 400
+
+execution:
+  timeout: 60
+  max_memory: "512MB"
+  max_cpu: 1

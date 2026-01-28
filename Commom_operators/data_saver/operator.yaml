@@ -1,0 +1,86 @@
+name: "data_saver"
+version: "1.0.0"
+description: "数据保存算子 - 将DataFrame保存到数据库或文件"
+author: "Biezhi Team"
+license: "MIT"
+type: "database"
+category: "数据存储"
+tags: ["dataframe", "database", "save", "storage"]
+
+code_path: "main.py"
+entry_point: "DataSaver"
+operator_type: "local_python"
+
+inputs:
+  - name: "dataframe"
+    type: "pandas.DataFrame"
+    required: true
+    description: "需要保存的DataFrame数据"
+
+outputs:
+  - name: "save_result"
+    type: "dict"
+    description: "保存结果信息"
+
+operator_params:
+  - name: "save_type"
+    label: "保存类型"
+    type: "string"
+    description: "选择保存方式"
+    required: true
+    default: "database"
+    ui:
+      component: "select"
+      options:
+        - label: "数据库"
+          value: "database"
+        - label: "CSV文件"
+          value: "csv"
+        - label: "JSON文件"
+          value: "json"
+        - label: "Excel文件"
+          value: "excel"
+
+  - name: "table_name"
+    label: "表名"
+    type: "string"
+    description: "数据库表名（仅当保存类型为数据库时有效）"
+    required: false
+    default: "analysis_result"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: linkedin_company_analysis"
+
+  - name: "file_path"
+    label: "文件路径"
+    type: "string"
+    description: "文件保存路径（仅当保存类型为文件时有效）"
+    required: false
+    default: "./output"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: ./results/analysis.csv"
+
+  - name: "if_exists"
+    label: "如果表已存在"
+    type: "string"
+    description: "当表已存在时的处理方式（仅数据库）"
+    required: false
+    default: "replace"
+    ui:
+      component: "select"
+      options:
+        - label: "替换"
+          value: "replace"
+        - label: "追加"
+          value: "append"
+        - label: "失败"
+          value: "fail"
+
+execution:
+  timeout: 600
+  max_memory: "2GB"
+  max_cpu: 2
+

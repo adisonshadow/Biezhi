@@ -1,0 +1,27 @@
+{
+  "name": "data-visualization-js-sdk",
+  "version": "1.0.0",
+  "description": "Data Visualization JS SDK for Biezhi2 workflow nodes",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "data-visualization",
+    "workflow",
+    "sdk",
+    "biezhi"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}

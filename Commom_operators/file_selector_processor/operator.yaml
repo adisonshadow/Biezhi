@@ -1,0 +1,152 @@
+# 文件选择和处理算子配置文件
+name: "file_selector_processor"
+version: "1.0.0"
+description: "通用文件选择和处理算子 - 支持本地CSV、TXT文件读取，输出DataFrame和数据结构描述"
+author: "FlowData Team"
+license: "MIT"
+
+# 分类和标签
+type: "file"
+category: "文件操作"
+tags: ["file", "csv", "txt", "dataframe", "data_processing"]
+
+# 代码路径
+code_path: "main.py"
+entry_point: "FileSelectorProcessor"
+
+# 输出定义
+outputs:
+  - name: "dataframe"
+    type: "pandas.DataFrame"
+    description: "处理后的数据DataFrame"
+
+  - name: "data_structure"
+    type: "dict"
+    description: "数据结构描述信息"
+
+# 算子参数配置（用户自定义配置）
+operator_params:
+  - name: "file_path"
+    label: "文件路径"
+    type: "file"
+    description: "文件路径（支持相对路径和绝对路径）"
+    required: true
+    validation:
+      message: "必须是有效的文件路径"
+    ui:
+      component: "fileInput"
+      componentProps:
+        placeholder: "请选择文件"
+  - name: "file_type"
+    label: "文件类型"
+    type: "string"
+    description: "选择要处理的文件类型"
+    required: true
+    default: "csv"
+    validation:
+      type: "string"
+      message: "必须选择有效的文件类型"
+    ui:
+      component: "select"
+      options:
+        - label: "CSV文件"
+          value: "csv"
+        - label: "TXT文件"
+          value: "txt"
+
+  - name: "encoding"
+    label: "文件编码"
+    type: "string"
+    description: "文件编码格式"
+    required: false
+    default: "utf-8"
+    validation:
+      type: "string"
+      message: "必须是有效的编码格式"
+    ui:
+      component: "select"
+      options:
+        - label: "UTF-8"
+          value: "utf-8"
+        - label: "GBK"
+          value: "gbk"
+        - label: "GB2312"
+          value: "gb2312"
+        - label: "ASCII"
+          value: "ascii"
+
+  - name: "delimiter"
+    label: "分隔符"
+    type: "string"
+    description: "CSV文件分隔符（仅对CSV文件有效）"
+    required: false
+    default: ","
+    validation:
+      type: "string"
+      message: "分隔符必须是单个字符"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "输入分隔符，如：, ; \t"
+
+  - name: "header_row"
+    label: "表头行"
+    type: "integer"
+    description: "表头所在行号（0表示第一行，-1表示无表头）"
+    required: false
+    default: 0
+    validation:
+      type: "integer"
+      min: -1
+      max: 100
+      message: "行号必须在-1到100之间"
+    ui:
+      component: "inputNumber"
+      componentProps:
+        min: -1
+        max: 100
+        step: 1
+
+  - name: "skip_rows"
+    label: "跳过行数"
+    type: "integer"
+    description: "读取文件时跳过的行数"
+    required: false
+    default: 0
+    validation:
+      type: "integer"
+      min: 0
+      max: 1000
+      message: "跳过的行数必须在0到1000之间"
+    ui:
+      component: "inputNumber"
+      componentProps:
+        min: 0
+        max: 1000
+        step: 1
+
+  - name: "na_values"
+    label: "空值标识"
+    type: "string"
+    description: "表示空值的字符串（多个值用逗号分隔）"
+    required: false
+    default: "NA,null,NaN,None"
+    validation:
+      type: "string"
+      message: "必须是有效的字符串"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "NA,null,NaN,None"
+
+  - name: "auto_detect_types"
+    label: "自动检测类型"
+    type: "boolean"
+    description: "是否自动检测列的数据类型"
+    required: false
+    default: true
+    validation:
+      type: "boolean"
+      message: "必须是布尔值"
+    ui:
+      component: "switch"

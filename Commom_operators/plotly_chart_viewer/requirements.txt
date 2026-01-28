@@ -1,0 +1,3 @@
+py-operator-sdk
+loguru
+plotly>=5.0.0

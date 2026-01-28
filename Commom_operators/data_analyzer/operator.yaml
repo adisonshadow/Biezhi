@@ -1,0 +1,89 @@
+name: "data_analyzer"
+version: "1.0.0"
+description: "数据分析算子 - 支持分组统计、聚合分析、描述性统计"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_analysis"
+category: "数据分析"
+tags: ["dataframe", "analysis", "statistics", "groupby"]
+
+code_path: "main.py"
+entry_point: "DataAnalyzer"
+operator_type: "local_python"
+
+inputs:
+  - name: "dataframe"
+    type: "pandas.DataFrame"
+    required: true
+    description: "需要分析的DataFrame数据"
+
+outputs:
+  - name: "analysis_result"
+    type: "pandas.DataFrame"
+    description: "分析结果DataFrame"
+  - name: "statistics_summary"
+    type: "dict"
+    description: "统计摘要信息"
+
+operator_params:
+  - name: "group_by_columns"
+    label: "分组列"
+    type: "string"
+    description: "用于分组的列名，多个列用逗号分隔"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: country_code, industries"
+
+  - name: "aggregate_columns"
+    label: "聚合列"
+    type: "string"
+    description: "需要聚合的列名，多个列用逗号分隔"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: followers, employees"
+
+  - name: "aggregate_functions"
+    label: "聚合函数"
+    type: "string"
+    description: "聚合函数，可选: count, sum, mean, median, min, max, std。多个函数用逗号分隔"
+    required: false
+    default: "count,mean"
+    ui:
+      component: "select"
+      options:
+        - label: "计数和均值"
+          value: "count,mean"
+        - label: "计数、均值、最大值"
+          value: "count,mean,max"
+        - label: "计数、总和、均值"
+          value: "count,sum,mean"
+        - label: "全部统计"
+          value: "count,sum,mean,median,min,max,std"
+
+  - name: "analysis_type"
+    label: "分析类型"
+    type: "string"
+    description: "选择分析类型"
+    required: false
+    default: "groupby"
+    ui:
+      component: "select"
+      options:
+        - label: "分组统计"
+          value: "groupby"
+        - label: "描述性统计"
+          value: "describe"
+        - label: "相关性分析"
+          value: "correlation"
+
+execution:
+  timeout: 300
+  max_memory: "2GB"
+  max_cpu: 2
+

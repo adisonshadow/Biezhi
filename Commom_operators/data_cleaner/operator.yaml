@@ -1,0 +1,83 @@
+name: "data_cleaner"
+version: "1.0.0"
+description: "数据清洗算子 - 清理空值、格式化数据、处理异常值"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_processing"
+category: "数据处理"
+tags: ["dataframe", "cleaning", "data_processing", "preprocessing"]
+
+code_path: "main.py"
+entry_point: "DataCleaner"
+operator_type: "local_python"
+
+inputs:
+  - name: "dataframe"
+    type: "pandas.DataFrame"
+    required: true
+    description: "需要清洗的DataFrame数据"
+
+outputs:
+  - name: "cleaned_dataframe"
+    type: "pandas.DataFrame"
+    description: "清洗后的DataFrame数据"
+
+operator_params:
+  - name: "drop_na_strategy"
+    label: "空值处理策略"
+    type: "string"
+    description: "处理空值的方式"
+    required: false
+    default: "none"
+    ui:
+      component: "select"
+      options:
+        - label: "不处理"
+          value: "none"
+        - label: "删除包含空值的行"
+          value: "drop_rows"
+        - label: "删除包含空值的列"
+          value: "drop_columns"
+        - label: "填充数值列（均值）"
+          value: "fill_numeric_mean"
+        - label: "填充数值列（中位数）"
+          value: "fill_numeric_median"
+        - label: "填充文本列（空字符串）"
+          value: "fill_text_empty"
+        - label: "填充文本列（前一个值）"
+          value: "fill_text_forward"
+
+  - name: "remove_duplicates"
+    label: "删除重复行"
+    type: "boolean"
+    description: "是否删除重复的行"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "normalize_columns"
+    label: "标准化列名"
+    type: "boolean"
+    description: "是否标准化列名（去除空格、转小写等）"
+    required: false
+    default: false
+    ui:
+      component: "switch"
+
+  - name: "columns_to_drop"
+    label: "要删除的列"
+    type: "string"
+    description: "要删除的列名，多个列用逗号分隔"
+    required: false
+    default: ""
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: col1, col2, col3"
+
+execution:
+  timeout: 300
+  max_memory: "2GB"
+  max_cpu: 2
+

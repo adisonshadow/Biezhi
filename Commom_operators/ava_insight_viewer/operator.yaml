@@ -1,0 +1,92 @@
+name: "ava_insight_viewer"
+version: "1.0.0"
+description: "基于 AVA (AntV Analytics) 的数据自动洞察可视化工具，自动分析数据并生成洞察卡片"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_visualtion"
+category: "数据可视化"
+tags: ["ava", "antv", "insight", "analytics", "visualization", "javascript", "frontend", "auto-analysis"]
+
+# 纯前端可视化算子不需要代码路径和执行配置
+# 数据通过 SSE 直接推送到前端，由 data_visualization.entry_file 中的前端代码处理
+
+inputs:
+  - name: "data"
+    type: "list"
+    required: true
+    description: "要分析的数据列表，应为对象数组格式，例如：[{field1: value1, field2: value2, ...}]"
+
+# 不定义 outputs，因为这只是用于可视化展示
+
+operator_params:
+  - name: "limit"
+    label: "洞察数量限制"
+    type: "number"
+    description: "最多返回的洞察数量"
+    required: false
+    default: 10
+    ui:
+      component: "number"
+      min: 1
+      max: 50
+
+  - name: "insight_types"
+    label: "洞察类型"
+    type: "string"
+    description: "要提取的洞察类型，多个类型用逗号分隔"
+    required: false
+    default: "time_series_outlier,trend"
+    ui:
+      component: "select"
+      options:
+        - label: "时间序列异常值"
+          value: "time_series_outlier"
+        - label: "趋势"
+          value: "trend"
+        - label: "变化点"
+          value: "change_point"
+        - label: "异常值"
+          value: "outlier"
+        - label: "类别异常"
+          value: "category_outlier"
+        - label: "低方差"
+          value: "low_variance"
+        - label: "相关性"
+          value: "correlation"
+        - label: "所有类型"
+          value: "all"
+
+  - name: "measures"
+    label: "度量字段配置"
+    type: "string"
+    description: "JSON 格式的度量字段配置，例如：[{\"fieldName\": \"value\", \"method\": \"MEAN\"}]"
+    required: false
+    default: "[]"
+    ui:
+      component: "textarea"
+      placeholder: '[{"fieldName": "value", "method": "MEAN"}]'
+
+  - name: "enable_visualization"
+    label: "启用可视化"
+    type: "boolean"
+    description: "是否在洞察结果中包含可视化图表"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+  - name: "auto_refresh"
+    label: "自动刷新"
+    type: "boolean"
+    description: "数据更新时是否自动重新分析"
+    required: false
+    default: true
+    ui:
+      component: "switch"
+
+data_visualization:
+  entry_file: "./preview/main.html"
+  allow_resize: true
+  size:
+    width: "100%"
+    height: 600

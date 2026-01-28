@@ -1,0 +1,75 @@
+name: "data_chart_viewer"
+version: "1.0.0"
+description: "数据图表查看器 - 使用 G2 图表库可视化数据，仅用于展示，不产生输出"
+author: "Biezhi Team"
+license: "MIT"
+type: "data_visualtion"
+category: "数据可视化"
+tags: ["chart", "visualization", "g2", "display"]
+
+code_path: "main.py"
+entry_point: "DataChartViewer"
+operator_type: "local_python"
+
+inputs:
+  - name: "data"
+    type: "list"
+    required: true
+    description: "要可视化的数据列表，格式: [{\"x\": value1, \"y\": value2}, ...]"
+
+# 不定义 outputs，因为这只是用于可视化展示
+
+operator_params:
+  - name: "chart_type"
+    label: "图表类型"
+    type: "string"
+    description: "选择图表类型"
+    required: false
+    default: "line"
+    ui:
+      component: "select"
+      options:
+        - label: "折线图"
+          value: "line"
+        - label: "柱状图"
+          value: "column"
+        - label: "面积图"
+          value: "area"
+
+  - name: "x_field"
+    label: "X轴字段"
+    type: "string"
+    description: "X轴对应的数据字段名"
+    required: false
+    default: "x"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: x, date, category"
+
+  - name: "y_field"
+    label: "Y轴字段"
+    type: "string"
+    description: "Y轴对应的数据字段名"
+    required: false
+    default: "y"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "例如: y, value, count"
+
+data_visualization:
+  entry_file: "./preview/main.tsx"
+  use_babel: true
+  always_expand: true
+  icon: "line-chart"
+  color: "#1890ff"
+  allow_fullscreen: true
+  size:
+    width: "auto"
+    height: 300
+
+execution:
+  timeout: 60
+  max_memory: "512MB"
+  max_cpu: 1

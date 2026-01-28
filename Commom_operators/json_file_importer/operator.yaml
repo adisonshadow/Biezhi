@@ -1,0 +1,134 @@
+# JSON文件导入算子配置文件
+name: "json_file_importer"
+version: "1.0.0"
+description: "JSON文件导入算子 - 支持本地文件上传和网络URL两种方式导入JSON文件"
+author: "FlowData Team"
+license: "MIT"
+
+# 分类和标签
+type: "file"
+category: "文件操作"
+tags: ["file", "json", "import", "data_processing", "network", "local"]
+
+# 代码路径
+code_path: "main.py"
+entry_point: "JsonFileImporter"
+
+# 输出定义
+outputs:
+  - name: "data"
+    type: "dict"
+    description: "解析后的JSON数据"
+
+  - name: "data_structure"
+    type: "dict"
+    description: "JSON数据结构描述信息"
+
+# 算子参数配置（用户自定义配置）
+operator_params:
+  - name: "source_type"
+    label: "数据来源"
+    type: "string"
+    description: "选择JSON数据的来源类型"
+    required: true
+    default: "local"
+    validation:
+      type: "string"
+      message: "必须选择有效的数据来源类型"
+    ui:
+      component: "select"
+      options:
+        - label: "本地上传"
+          value: "local"
+        - label: "网络URL"
+          value: "network"
+
+  - name: "file_path"
+    label: "文件路径"
+    type: "file"
+    description: "本地JSON文件路径（仅当数据来源为'本地上传'时使用）"
+    required: false
+    validation:
+      message: "必须是有效的文件路径"
+    ui:
+      component: "fileInput"
+      componentProps:
+        placeholder: "请选择JSON文件"
+      showWhen:
+        field: "source_type"
+        value: "local"
+
+  - name: "url"
+    label: "网络URL"
+    type: "string"
+    description: "JSON文件的网络URL地址（仅当数据来源为'网络URL'时使用）"
+    required: false
+    validation:
+      type: "string"
+      pattern: "^https?://.*"
+      message: "必须是有效的HTTP或HTTPS URL"
+    ui:
+      component: "input"
+      componentProps:
+        placeholder: "https://example.com/data.json"
+      showWhen:
+        field: "source_type"
+        value: "network"
+
+  - name: "encoding"
+    label: "文件编码"
+    type: "string"
+    description: "文件编码格式（仅对本地文件有效）"
+    required: false
+    default: "utf-8"
+    validation:
+      type: "string"
+      message: "必须是有效的编码格式"
+    ui:
+      component: "select"
+      options:
+        - label: "UTF-8"
+          value: "utf-8"
+        - label: "GBK"
+          value: "gbk"
+        - label: "GB2312"
+          value: "gb2312"
+        - label: "ASCII"
+          value: "ascii"
+
+  - name: "timeout"
+    label: "请求超时时间（秒）"
+    type: "integer"
+    description: "网络请求的超时时间（仅对网络URL有效）"
+    required: false
+    default: 30
+    validation:
+      type: "integer"
+      min: 1
+      max: 300
+      message: "超时时间必须在1到300秒之间"
+    ui:
+      component: "inputNumber"
+      componentProps:
+        min: 1
+        max: 300
+        step: 1
+      showWhen:
+        field: "source_type"
+        value: "network"
+
+  - name: "verify_ssl"
+    label: "验证SSL证书"
+    type: "boolean"
+    description: "是否验证SSL证书（仅对HTTPS URL有效）"
+    required: false
+    default: true
+    validation:
+      type: "boolean"
+      message: "必须是布尔值"
+    ui:
+      component: "switch"
+      showWhen:
+        field: "source_type"
+        value: "network"
+

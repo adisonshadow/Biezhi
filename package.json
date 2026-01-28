@@ -1,0 +1,54 @@
+{
+  "name": "biezhi2",
+  "version": "2.0.0",
+  "description": "AI数据计算、分析与报告平台 - 重构版本",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only api/src/index.ts",
+    "start": "node dist/index.js",
+    "api:dev": "ts-node-dev --respawn --transpile-only api/src/index.ts",
+    "api:build": "tsc -p api/tsconfig.json",
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build",
+    "cli:build": "tsc -p cli/tsconfig.json"
+  },
+  "keywords": [
+    "ai",
+    "workflow",
+    "data-analysis",
+    "dag"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/multer": "^2.0.0",
+    "adb-typeorm": "^0.0.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "commander": "^11.1.0",
+    "koa": "^2.15.0",
+    "koa-bodyparser": "^4.4.1",
+    "koa-cors": "^0.0.16",
+    "koa-json": "^2.0.2",
+    "koa-router": "^12.0.1",
+    "koa2-swagger-ui": "^5.12.0",
+    "multer": "^2.0.2",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.7",
+    "swagger-jsdoc": "^6.2.8",
+    "typeorm": "^0.3.28",
+    "uuid": "^9.0.1",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/koa": "^2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa-router": "^7.4.8",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^9.0.8",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

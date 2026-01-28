@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVA 数据自动洞察</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 16px;
+            background: #f5f5f5;
+        }
+        .header {
+            border-bottom: 1px solid #e9e9e9;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            background: white;
+            padding: 16px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: #666;
+            font-size: 14px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: #ff4d4f;
+            font-size: 14px;
+            padding: 20px;
+            text-align: center;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .insights-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            color: #999;
+            font-size: 14px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .insight-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            border-left: 4px solid #1890ff;
+        }
+        .insight-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .insight-type {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #e6f7ff;
+            color: #1890ff;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .insight-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            flex: 1;
+        }
+        .insight-score {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+        .insight-description {
+            color: #595959;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .insight-details {
+            background: #fafafa;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .insight-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .insight-detail-label {
+            color: #8c8c8c;
+        }
+        .insight-detail-value {
+            color: #262626;
+            font-weight: 500;
+        }
+        .insight-chart {
+            margin-top: 12px;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="header">
+            <h2>数据洞察列表</h2>
+        </div>
+        <div id="content">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div>正在分析数据...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getInsights } from 'https://cdn.skypack.dev/@antv/ava@3.4.1';
+        
+        (function(getInsights) {
+            'use strict';
+
+            var currentData = null;
+            var currentConfig = null;
+            var nodeInfo = null;
+            var isLoading = true;
+            var error = null;
+            var insightsResult = null;
+
+            // 默认配置
+            var defaultConfig = {
+                limit: 10,
+                measures: [],
+                visualization: true,
+                insightTypes: ['time_series_outlier', 'trend']
+            };
+
+            // 初始化：发送 ready 消息
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'ready'
+                }, window.location.origin);
+            }
+
+            // 解析配置参数
+            function parseConfig(config) {
+                const parsed = {
+                    limit: config.limit || defaultConfig.limit,
+                    measures: defaultConfig.measures,
+                    visualization: config.enable_visualization !== false,
+                    insightTypes: defaultConfig.insightTypes
+                };
+
+                // 解析 measures
+                if (config.measures) {
+                    try {
+                        const measuresStr = typeof config.measures === 'string' 
+                            ? config.measures 
+                            : JSON.stringify(config.measures);
+                        parsed.measures = JSON.parse(measuresStr || '[]');
+                    } catch (e) {
+                        console.warn('[AVA Insight Viewer] 解析 measures 失败:', e);
+                        parsed.measures = [];
+                    }
+                }
+
+                // 解析 insight_types
+                if (config.insight_types) {
+                    const typesStr = typeof config.insight_types === 'string' 
+                        ? config.insight_types 
+                        : JSON.stringify(config.insight_types);
+                    if (typesStr === 'all') {
+                        parsed.insightTypes = undefined; // undefined 表示所有类型
+                    } else {
+                        parsed.insightTypes = typesStr.split(',').map(t => t.trim()).filter(t => t);
+                    }
+                }
+
+                return parsed;
+            }
+
+            // 分析数据
+            function analyzeData(data, config) {
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    return {
+                        insights: [],
+                        error: '数据为空或格式不正确，需要对象数组格式'
+                    };
+                }
+
+                try {
+                    const analysisConfig = parseConfig(config);
+                    const result = getInsights(data, analysisConfig);
+                    return result;
+                } catch (e) {
+                    console.error('[AVA Insight Viewer] 分析数据失败:', e);
+                    return {
+                        insights: [],
+                        error: '分析数据时出错: ' + e.message
+                    };
+                }
+            }
+
+            // 渲染内容
+            function renderContent() {
+                const container = document.getElementById('content');
+                
+                if (error) {
+                    container.innerHTML = `
+                        <div class="error-container">
+                            <div class="error-icon">⚠️</div>
+                            <div>${error}</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (isLoading) {
+                    container.innerHTML = `
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <div>正在分析数据...</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (!insightsResult || !insightsResult.insights || insightsResult.insights.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <div>未发现数据洞察</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 渲染洞察卡片
+                const insightsHtml = insightsResult.insights.map((insight, index) => {
+                    return renderInsightCard(insight, index);
+                }).join('');
+
+                container.innerHTML = `<div class="insights-container">${insightsHtml}</div>`;
+            }
+
+            // 渲染单个洞察卡片
+            function renderInsightCard(insight, index) {
+                const type = insight.type || 'unknown';
+                const typeLabel = getInsightTypeLabel(type);
+                const title = insight.title || insight.description || '数据洞察';
+                const description = insight.description || '';
+                const score = insight.score !== undefined ? (insight.score * 100).toFixed(1) + '%' : '';
+                
+                let detailsHtml = '';
+                if (insight.fields && insight.fields.length > 0) {
+                    detailsHtml = `
+                        <div class="insight-details">
+                            <div class="insight-detail-item">
+                                <span class="insight-detail-label">相关字段:</span>
+                                <span class="insight-detail-value">${insight.fields.join(', ')}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (insight.measure) {
+                    detailsHtml += `
+                        <div class="insight-details" style="margin-top: 8px;">
+                            <div class="insight-detail-item">
+                                <span class="insight-detail-label">度量:</span>
+                                <span class="insight-detail-value">${insight.measure.fieldName || ''} (${insight.measure.method || ''})</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                let chartHtml = '';
+                if (insight.visualizationSpec) {
+                    chartHtml = `
+                        <div class="insight-chart">
+                            <div style="color: #8c8c8c; font-size: 12px; margin-bottom: 8px;">可视化图表:</div>
+                            <div id="insight-chart-${index}" style="width: 100%; height: 200px;"></div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="insight-card">
+                        <div class="insight-card-header">
+                            <span class="insight-type">${typeLabel}</span>
+                            <div class="insight-title">${title}</div>
+                            ${score ? `<div class="insight-score">置信度: ${score}</div>` : ''}
+                        </div>
+                        ${description ? `<div class="insight-description">${description}</div>` : ''}
+                        ${detailsHtml}
+                        ${chartHtml}
+                    </div>
+                `;
+            }
+
+            // 获取洞察类型标签
+            function getInsightTypeLabel(type) {
+                const typeMap = {
+                    'time_series_outlier': '时间序列异常',
+                    'trend': '趋势',
+                    'change_point': '变化点',
+                    'outlier': '异常值',
+                    'category_outlier': '类别异常',
+                    'low_variance': '低方差',
+                    'correlation': '相关性',
+                    'distribution': '分布',
+                    'majority': '主要值',
+                    'extreme': '极值'
+                };
+                return typeMap[type] || type;
+            }
+
+            // 处理数据更新
+            function handleDataUpdate(payload) {
+                console.log('[AVA Insight Viewer] 收到数据更新:', {
+                    dataKeys: Object.keys(payload || {}),
+                    dataSize: JSON.stringify(payload || {}).length
+                });
+
+                currentData = payload;
+                
+                // 检查是否有数据
+                const dataArray = Array.isArray(payload) ? payload : 
+                                (payload?.data && Array.isArray(payload.data) ? payload.data : null);
+
+                if (!dataArray || dataArray.length === 0) {
+                    error = '数据为空，请提供有效的数组数据';
+                    isLoading = false;
+                    insightsResult = null;
+                    renderContent();
+                    return;
+                }
+
+                error = null;
+                isLoading = true;
+                renderContent();
+
+                // 异步分析数据
+                setTimeout(() => {
+                    try {
+                        insightsResult = analyzeData(dataArray, currentConfig || {});
+                        if (insightsResult.error) {
+                            error = insightsResult.error;
+                            insightsResult = null;
+                        }
+                        isLoading = false;
+                        renderContent();
+                    } catch (e) {
+                        console.error('[AVA Insight Viewer] 处理数据更新失败:', e);
+                        error = '处理数据时出错: ' + e.message;
+                        isLoading = false;
+                        insightsResult = null;
+                        renderContent();
+                    }
+                }, 100);
+            }
+
+            // 处理配置更新
+            function handleConfigUpdate(payload) {
+                console.log('[AVA Insight Viewer] 收到配置更新:', payload);
+                currentConfig = payload || {};
+                
+                // 如果配置变化且已有数据，重新分析
+                if (currentData && currentConfig.auto_refresh !== false) {
+                    handleDataUpdate(currentData);
+                }
+            }
+
+            // 处理节点信息更新
+            function handleNodeInfoUpdate(payload) {
+                console.log('[AVA Insight Viewer] 收到节点信息更新:', payload);
+                nodeInfo = payload;
+            }
+
+            // 监听来自主应用的消息
+            window.addEventListener('message', function(event) {
+                // 安全检查：只接受来自同源的消息
+                if (event.origin !== window.location.origin) {
+                    return;
+                }
+
+                try {
+                    const message = event.data;
+                    if (!message || !message.type) {
+                        return;
+                    }
+
+                    console.log('[AVA Insight Viewer] 收到消息:', message.type);
+
+                    switch (message.type) {
+                        case 'data_update':
+                            handleDataUpdate(message.payload);
+                            break;
+                        case 'config_update':
+                            handleConfigUpdate(message.payload);
+                            break;
+                        case 'node_info':
+                            handleNodeInfoUpdate(message.payload);
+                            break;
+                        default:
+                            console.warn('[AVA Insight Viewer] 未知消息类型:', message.type);
+                    }
+                } catch (e) {
+                    console.error('[AVA Insight Viewer] 处理消息失败:', e);
+                    error = '处理消息时出错: ' + e.message;
+                    renderContent();
+                }
+            });
+
+            // 初始渲染
+            renderContent();
+        })(getInsights);
+    </script>
+</body>
+</html>

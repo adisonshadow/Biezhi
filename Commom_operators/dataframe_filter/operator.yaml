@@ -1,0 +1,33 @@
+name: "dataframe_filter"
+version: "1.0.0"
+description: "基于DataFrame的数据过滤器，可以根据用户配置的规则过滤数据"
+author: "FlowData Team"
+license: "MIT"
+type: "data_processing"
+category: "数据处理"
+tags: ["dataframe", "filter", "data_processing"]
+
+code_path: "main.py"
+entry_point: "DataFrameFilter"
+
+inputs:
+  - name: "dataframe"
+    type: "pandas.DataFrame"
+    required: true
+    description: "需要过滤的DataFrame数据"
+
+outputs:
+  - name: "filtered_dataframe"
+    type: "pandas.DataFrame"
+    description: "过滤后的DataFrame数据"
+
+operator_params:
+  - name: "filter_rules"
+    label: "过滤规则"
+    type: "string"
+    description: "JSON格式的过滤规则，支持多条件组合。"
+    required: true
+    ui:
+      component: "textarea"
+      componentProps:
+        placeholder: "请输入JSON格式的过滤规则，例如：{\"column\": \"age\", \"operator\": \">\", \"value\": 18}"
